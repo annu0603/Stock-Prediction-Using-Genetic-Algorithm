@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stock Price Prediction - Genetic Algorithm</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        
+        header {
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        
+        header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+        
+        .content {
+            padding: 40px;
+        }
+        
+        .input-section {
+            background: #f8f9fa;
+            padding: 30px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        
+        input, select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            font-size: 1em;
+            transition: border-color 0.3s;
+        }
+        
+        input:focus, select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+        
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 40px;
+            border: none;
+            border-radius: 5px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            width: 100%;
+            margin-top: 10px;
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+        
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 40px;
+        }
+        
+        .loading.active {
+            display: block;
+        }
+        
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .results {
+            display: none;
+        }
+        
+        .results.active {
+            display: block;
+        }
+        
+        .metrics {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .metric-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 10px;
+            text-align: center;
+        }
+        
+        .metric-card h3 {
+            font-size: 0.9em;
+            opacity: 0.9;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .metric-card .value {
+            font-size: 2em;
+            font-weight: 700;
+        }
+        
+        .plot-container {
+            margin-bottom: 30px;
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+        }
+        
+        .plot-container h3 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+        }
+        
+        .plot-container img {
+            width: 100%;
+            border-radius: 5px;
+        }
+        
+        .error {
+            display: none;
+            background: #fee;
+            border-left: 4px solid #f44336;
+            padding: 20px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            color: #c62828;
+        }
+        
+        .error.active {
+            display: block;
+        }
+        
+        .info-box {
+            background: #e3f2fd;
+            border-left: 4px solid #2196F3;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        
+        .info-box strong {
+            color: #1976D2;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📈 Stock Price Predictor</h1>
+            <p>Using Genetic Algorithm to Evolve Trading Strategies</p>
+        </header>
+        
+        <div class="content">
+            <div class="info-box">
+                <strong>How it works:</strong> The genetic algorithm evolves a population of trading strategies over multiple generations, selecting the best-performing simple moving average (SMA) window size to predict stock prices.
+            </div>
+            
+            <div class="input-section">
+                <h2 style="margin-bottom: 20px; color: #2c3e50;">Configuration</h2>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="ticker">Stock Ticker Symbol</label>
+                        <input type="text" id="ticker" placeholder="e.g., AAPL, GOOGL, TSLA" value="AAPL">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="period">Historical Period</label>
+                        <select id="period">
+                            <option value="1mo">1 Month</option>
+                            <option value="3mo" selected>3 Months</option>
+                            <option value="6mo">6 Months</option>
+                            <option value="1y">1 Year</option>
+                            <option value="2y">2 Years</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="generations">Generations</label>
+                        <input type="number" id="generations" min="10" max="200" value="50">
+                    </div>
+                </div>
+                
+                <button id="predictBtn" onclick="runPrediction()">🚀 Run Prediction</button>
+            </div>
+            
+            <div class="error" id="errorMsg"></div>
+            
+            <div class="loading" id="loading">
+                <div class="spinner"></div>
+                <p style="color: #667eea; font-size: 1.1em; font-weight: 600;">Evolving strategies... This may take a moment</p>
+            </div>
+            
+            <div class="results" id="results">
+                <h2 style="margin-bottom: 20px; color: #2c3e50;">Results</h2>
+                
+                <div class="metrics" id="metrics"></div>
+                
+                <div class="plot-container">
+                    <h3>📊 Price Prediction</h3>
+                    <img id="predictionPlot" alt="Prediction Plot">
+                </div>
+                
+                <div class="plot-container">
+                    <h3>📈 Fitness Evolution</h3>
+                    <img id="fitnessPlot" alt="Fitness Plot">
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        async function runPrediction() {
+            const ticker = document.getElementById('ticker').value.trim().toUpperCase();
+            const period = document.getElementById('period').value;
+            const generations = document.getElementById('generations').value;
+            
+            if (!ticker) {
+                showError('Please enter a stock ticker symbol');
+                return;
+            }
+            
+            // Reset UI
+            document.getElementById('errorMsg').classList.remove('active');
+            document.getElementById('results').classList.remove('active');
+            document.getElementById('loading').classList.add('active');
+            document.getElementById('predictBtn').disabled = true;
+            
+            try {
+                const response = await fetch('/predict', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        ticker: ticker,
+                        period: period,
+                        generations: parseInt(generations)
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    displayResults(data);
+                } else {
+                    showError(data.error || 'An error occurred during prediction');
+                }
+            } catch (error) {
+                showError('Network error: ' + error.message);
+            } finally {
+                document.getElementById('loading').classList.remove('active');
+                document.getElementById('predictBtn').disabled = false;
+            }
+        }
+        
+        function displayResults(data) {
+            // Update metrics
+            const metricsHTML = `
+                <div class="metric-card">
+                    <h3>Ticker</h3>
+                    <div class="value">${data.ticker}</div>
+                </div>
+                <div class="metric-card">
+                    <h3>Best Window</h3>
+                    <div class="value">${data.best_window}</div>
+                </div>
+                <div class="metric-card">
+                    <h3>Mean Abs Error</h3>
+                    <div class="value">$${data.mae.toFixed(2)}</div>
+                </div>
+                <div class="metric-card">
+                    <h3>Data Points</h3>
+                    <div class="value">${data.data_points}</div>
+                </div>
+            `;
+            
+            document.getElementById('metrics').innerHTML = metricsHTML;
+            
+            // Update plots
+            document.getElementById('predictionPlot').src = 'data:image/png;base64,' + data.prediction_plot;
+            document.getElementById('fitnessPlot').src = 'data:image/png;base64,' + data.fitness_plot;
+            
+            // Show results
+            document.getElementById('results').classList.add('active');
+            
+            // Scroll to results
+            document.getElementById('results').scrollIntoView({ behavior: 'smooth' });
+        }
+        
+        function showError(message) {
+            const errorDiv = document.getElementById('errorMsg');
+            errorDiv.textContent = message;
+            errorDiv.classList.add('active');
+        }
+        
+        // Allow Enter key to trigger prediction
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('ticker').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    runPrediction();
+                }
+            });
+        });
+    </script>
+</body>
+</html>
