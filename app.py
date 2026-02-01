@@ -173,9 +173,9 @@ class GeneticStockPredictor:
             while len(new_population) < self.population_size:
                 # Tournament selection
                 parent1 = max(random.sample(population[:self.population_size//2], 3), 
-                            key=self.fitness_function)
+            key=self.fitness_function)
                 parent2 = max(random.sample(population[:self.population_size//2], 3), 
-                            key=self.fitness_function)
+            key=self.fitness_function)
                 
                 child = self.crossover(parent1, parent2)
                 child = self.mutate(child)
