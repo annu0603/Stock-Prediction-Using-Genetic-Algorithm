@@ -24,13 +24,33 @@ class GeneticStockPredictor:
         
     def fetch_stock_data(self):
         """Fetch stock data using yfinance"""
+    try:
+        # Add user agent to avoid blocking
+        import yfinance as yf
+        yf.pdr_override()
+        
         stock = yf.Ticker(self.ticker)
         data = stock.history(period=self.period)
+        
+        # Debugging
+        print(f"Attempting to fetch {self.ticker} for period {self.period}")
+        print(f"Data shape: {data.shape if not data.empty else 'EMPTY'}")
+        
         if data.empty:
-            raise ValueError(f"No data found for ticker {self.ticker}")
+            # Try alternative download method
+            import yfinance as yf
+            data = yf.download(self.ticker, period=self.period, progress=False)
+            
+        if data.empty or len(data) < 10:
+            raise ValueError(f"No data found for ticker {self.ticker}. Please check the ticker symbol.")
+            
         self.historical_prices = data['Close'].values
         self.dates = data.index
         return self.historical_prices
+        
+    except Exception as e:
+        print(f"Error fetching data: {str(e)}")
+        raise ValueError(f"Failed to fetch data for {self.ticker}: {str(e)}")
     
     def calculate_sma(self, data, window):
         """Calculate Simple Moving Average"""
